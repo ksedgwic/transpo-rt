@@ -5,6 +5,9 @@ use crate::siri_lite::{self, service_delivery as model, SiriResponse};
 use crate::utils;
 use actix_web::{error, web};
 use openapi_schema::OpenapiSchema;
+use serde::de::{self, SeqAccess, Visitor};
+use serde::{Deserialize, Deserializer};
+use std::fmt;
 use transit_model::objects::StopPoint;
 use typed_index_collection::Idx;
 
@@ -32,7 +35,12 @@ pub struct Params {
     monitoring_ref: String,
     /// Filter the departures of the given line's id
     line_ref: Option<String>,
-    _destination_ref: Option<String>,
+    /// Filter departures that will call at (or terminate at) the given stop_point id
+    #[serde(default, deserialize_with = "deserialize_string_to_option")]
+    destination_ref: Option<String>,
+    /// Exclude departures that will call at any of the provided stop_point ids
+    #[serde(default, deserialize_with = "deserialize_string_or_seq")]
+    not_via_ref: Vec<String>,
     /// start_time is the datetime from which we want the next departures
     /// The default is the current time of the query
     start_time: Option<siri_lite::DateTime>,
@@ -122,6 +130,34 @@ fn get_line_ref<'a>(cnx: &Connection, model: &'a transit_model::Model) -> Option
     model.routes.get(&vj.route_id).map(|r| r.line_id.as_str())
 }
 
+fn calls_at_stop(
+    cnx: &Connection,
+    destination_ref: &str,
+    model: &transit_model::Model,
+) -> bool {
+    let vj = &model.vehicle_journeys[cnx.dated_vj.vj_idx];
+    vj.stop_times.iter().any(|st| {
+        st.sequence >= cnx.sequence
+            && model.stop_points[st.stop_point_idx].id.as_str() == destination_ref
+    })
+}
+
+fn avoids_stops(
+    cnx: &Connection,
+    excluded_stops: &[String],
+    model: &transit_model::Model,
+) -> bool {
+    if excluded_stops.is_empty() {
+        return true;
+    }
+    let vj = &model.vehicle_journeys[cnx.dated_vj.vj_idx];
+    vj.stop_times
+        .iter()
+        .filter(|st| st.sequence > cnx.sequence)
+        .map(|st| &model.stop_points[st.stop_point_idx].id)
+        .all(|stop_id| !excluded_stops.iter().any(|excluded| excluded == stop_id))
+}
+
 fn is_in_interval(
     cnx: &Connection,
     start_time: chrono::NaiveDateTime,
@@ -160,6 +196,13 @@ fn create_stop_monitoring(
         .filter(|(_, c)| {
             requested_line_ref.is_none() || requested_line_ref == get_line_ref(&c, &data.ntm)
         })
+        .filter(|(_, c)| {
+            request
+                .destination_ref
+                .as_deref()
+                .map_or(true, |dest| calls_at_stop(c, dest, &data.ntm))
+        })
+        .filter(|(_, c)| avoids_stops(c, &request.not_via_ref, &data.ntm))
         .filter(|(_, c)| is_in_interval(&c, requested_start_time, &request.preview_interval))
         .map(|(idx, c)| {
             create_monitored_stop_visit(
@@ -232,4 +275,60 @@ pub async fn stop_monitoring_query(
     rt_dataset_wrapper: RealTimeDatasetWrapper,
 ) -> actix_web::Result<web::Json<SiriResponse>> {
     Ok(web::Json(stop_monitoring(query, rt_dataset_wrapper)?))
+}
+fn deserialize_string_or_seq<'de, D>(deserializer: D) -> Result<Vec<String>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    struct StringOrSeqVisitor;
+
+    impl<'de> Visitor<'de> for StringOrSeqVisitor {
+        type Value = Vec<String>;
+
+        fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+            formatter.write_str("a string or a sequence of strings")
+        }
+
+        fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+        where
+            E: de::Error,
+        {
+            Ok(vec![value.to_owned()])
+        }
+
+        fn visit_string<E>(self, value: String) -> Result<Self::Value, E>
+        where
+            E: de::Error,
+        {
+            Ok(vec![value])
+        }
+
+        fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
+        where
+            A: SeqAccess<'de>,
+        {
+            let mut values = Vec::new();
+            while let Some(value) = seq.next_element()? {
+                values.push(value);
+            }
+            Ok(values)
+        }
+
+        fn visit_unit<E>(self) -> Result<Self::Value, E>
+        where
+            E: de::Error,
+        {
+            Ok(Vec::new())
+        }
+    }
+
+    deserializer.deserialize_any(StringOrSeqVisitor)
+}
+
+fn deserialize_string_to_option<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let opt = Option::<String>::deserialize(deserializer)?;
+    Ok(opt.filter(|s| !s.is_empty()))
 }

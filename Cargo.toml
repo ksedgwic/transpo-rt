@@ -46,3 +46,6 @@ pretty_assertions = "0.6"
 
 [build-dependencies]
 prost-build = "0.4"
+
+[patch.crates-io]
+transit_model = { path = "vendor/transit_model" }

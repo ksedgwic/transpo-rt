@@ -1,0 +1,37 @@
+[package]
+authors = ["Kisio Digital <team.coretools@kisio.org>", "Guillaume Pinot <texitoi@texitoi.eu>"]
+name = "transit_model"
+version = "0.4.1"
+license = "AGPL-3.0"
+description = "Transit data management"
+repository = "https://github.com/CanalTP/transit_model"
+keywords = ["ntfs", "gtfs", "netex", "navitia", "transit"]
+edition = "2018"
+
+[dependencies]
+chrono = "0.4.0"
+csv = "1.0.0"
+derivative = "1"
+env_logger = "0.5"
+log = "0.4"
+serde = "1"
+serde_derive = "1"
+structopt = "0.2"
+failure = "0.1.1"
+serde_json = "1"
+minidom = "0.9.0"
+zip = "0.3.2"
+tempdir = "0.3.7"
+walkdir = "2.1.4"
+geo-types = "0.1.1"
+wkt = "0.1.2"
+reqwest = "0.9"
+lazy_static = "1.2.0"
+regex = "1.1.2"
+
+[dependencies.transit_model_procmacro]
+path = "transit_model_procmacro"
+version = "0.1.0"
+
+[workspace]
+members = ["model-builder"]

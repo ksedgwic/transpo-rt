@@ -77,8 +77,8 @@ impl<'a> From<&'a objects::Network> for Agency {
     }
 }
 
-#[derivative(Default)]
 #[derive(Derivative, Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
+#[derivative(Default)]
 enum StopLocationType {
     #[derivative(Default)]
     #[serde(rename = "0")]
@@ -123,9 +123,8 @@ struct Stop {
     wheelchair_boarding: Availability,
 }
 
-#[derive(Derivative)]
+#[derive(Derivative, Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 #[derivative(Default)]
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 enum DirectionType {
     #[derivative(Default)]
     #[serde(rename = "0")]
@@ -185,7 +184,7 @@ struct StopTime {
     timepoint: bool,
 }
 
-#[derive(Serialize, Deserialize, Debug, Derivative, PartialEq)]
+#[derive(Derivative, Serialize, Deserialize, Debug, PartialEq)]
 #[derivative(Default)]
 enum TransferType {
     #[derivative(Default)]

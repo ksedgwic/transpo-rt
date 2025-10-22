@@ -303,8 +303,8 @@ impl WithId for Dataset {
     }
 }
 
-#[derivative(Default)]
 #[derive(Derivative, Serialize, Deserialize, Debug, PartialEq)]
+#[derivative(Default)]
 pub struct CommercialMode {
     #[derivative(Default(value = "\"default_commercial_mode\".into()"))]
     #[serde(rename = "commercial_mode_id")]
@@ -957,8 +957,8 @@ impl GetObjectType for StopArea {
         ObjectType::StopArea
     }
 }
-#[derivative(Default)]
 #[derive(Derivative, Debug, PartialEq, Clone)]
+#[derivative(Default)]
 pub enum StopType {
     #[derivative(Default)]
     Point,

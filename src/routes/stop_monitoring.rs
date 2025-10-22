@@ -5,8 +5,8 @@ use crate::siri_lite::{self, service_delivery as model, SiriResponse};
 use crate::utils;
 use actix_web::{error, web};
 use openapi_schema::OpenapiSchema;
-use transit_model::collection::Idx;
 use transit_model::objects::StopPoint;
+use typed_index_collection::Idx;
 
 #[derive(Debug, Deserialize, PartialEq, Eq, OpenapiSchema)]
 enum DataFreshness {

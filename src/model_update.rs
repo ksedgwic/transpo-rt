@@ -5,7 +5,7 @@ use anyhow::Error;
 use chrono::{DateTime, NaiveDateTime, Utc};
 use log::{debug, trace, warn};
 use std::collections::HashMap;
-use transit_model::collection::Idx;
+use typed_index_collection::Idx;
 use transit_model::objects::StopPoint;
 
 #[derive(Debug, PartialEq, Eq)]

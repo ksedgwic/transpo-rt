@@ -7,6 +7,7 @@ use crate::routes::{
 };
 use actix::{Actor, Addr};
 use actix_web::web;
+use anyhow::anyhow;
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
@@ -16,7 +17,18 @@ async fn create_dataset_actors_impl(
     logger: &slog::Logger,
 ) -> (DatasetInfo, Result<Addr<DatasetActor>, anyhow::Error>) {
     log::info!("creating actors");
-    let dataset = Dataset::try_from_dataset_info(dataset_info.clone(), &generation_period);
+    let dataset_info_load = dataset_info.clone();
+    let generation_period_load = generation_period.clone();
+    let dataset = web::block(move || {
+        Dataset::try_from_dataset_info(dataset_info_load, &generation_period_load)
+    })
+    .await
+    .map_err(|err| match err {
+        actix_web::error::BlockingError::Error(e) => e,
+        actix_web::error::BlockingError::Canceled => {
+            anyhow!("blocking GTFS load task was canceled")
+        }
+    });
     if let Err(ref err) = dataset {
         slog::error!(
             logger,

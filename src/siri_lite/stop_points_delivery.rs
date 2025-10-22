@@ -1,7 +1,7 @@
 use openapi_schema::OpenapiSchema;
-use transit_model::collection::Idx;
 use transit_model::objects::StopPoint;
 use transit_model::Model;
+use typed_index_collection::Idx;
 
 #[derive(Debug, Serialize, Deserialize, OpenapiSchema)]
 #[serde(rename_all = "PascalCase")]

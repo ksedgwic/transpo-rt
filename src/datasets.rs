@@ -1,11 +1,12 @@
-use anyhow::anyhow;
+use anyhow::{anyhow, Context};
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use chrono_tz::Tz;
 use log::info;
 use openapi_schema::OpenapiSchema;
 use std::collections::HashMap;
+use std::io::Cursor;
 use std::sync::Arc;
-use transit_model::collection::Idx;
+use typed_index_collection::Idx;
 
 use crate::transit_realtime;
 
@@ -196,12 +197,7 @@ impl HasTimezone for transit_model::Model {
         self.networks
             .values()
             .next()
-            .and_then(|n| n.timezone.as_ref())
-            .and_then(|t| {
-                t.parse()
-                    .map_err(|e| log::warn!("impossible to parse timezone {} because: {}", t, e))
-                    .ok()
-            })
+            .and_then(|n| n.timezone)
     }
 }
 
@@ -239,11 +235,19 @@ impl Dataset {
         log::info!("reading from path");
         let gtfs = dataset_info.gtfs.as_str();
         let nav_data = if gtfs.starts_with("http") {
-            log::debug!("gtfs read_from_url \"{}\"", gtfs);
-            transit_model::gtfs::read_from_url(gtfs, None::<&str>, None)
+            log::debug!("gtfs from_zip_reader \"{}\"", gtfs);
+            let response = reqwest::blocking::get(gtfs)
+                .with_context(|| format!("impossible to fetch GTFS {}", gtfs))?
+                .error_for_status()
+                .with_context(|| format!("error response while fetching GTFS {}", gtfs))?;
+            let bytes = response
+                .bytes()
+                .with_context(|| format!("impossible to read GTFS {} bytes", gtfs))?;
+            let cursor = Cursor::new(bytes.to_vec());
+            transit_model::gtfs::from_zip_reader(cursor, gtfs)
         } else {
-            log::debug!("gtfs read_from_zip \"{}\"", gtfs);
-            transit_model::gtfs::read_from_zip(gtfs, None::<&str>, None)
+            log::debug!("gtfs read \"{}\"", gtfs);
+            transit_model::gtfs::read(gtfs)
         }
         .map_err(|e| anyhow!("impossible to read GTFS {} because {}", gtfs, e))?;
         log::info!("gtfs read");

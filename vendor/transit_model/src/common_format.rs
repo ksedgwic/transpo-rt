@@ -141,10 +141,26 @@ where
         Some(reader) => {
             info!("Reading {}", file);
 
-            let mut rdr = csv::Reader::from_reader(reader);
-            for calendar_date in rdr.deserialize() {
-                let calendar_date: CalendarDate =
-                    calendar_date.with_context(ctx_from_path!(path))?;
+            let mut rdr = csv::ReaderBuilder::new()
+                .trim(csv::Trim::All)
+                .from_reader(reader);
+            log::debug!(
+                "calendar_dates.txt headers after trim for {}: {:?}",
+                path.display(),
+                rdr.headers().ok()
+            );
+            for (idx, calendar_date) in rdr.deserialize::<CalendarDate>().enumerate() {
+                let calendar_date: CalendarDate = calendar_date
+                    .map_err(|err| {
+                        log::error!(
+                            "failed to parse calendar_dates.txt row {} ({}): {}",
+                            idx + 2,
+                            path.display(),
+                            err
+                        );
+                        err
+                    })
+                    .with_context(ctx_from_path!(path))?;
 
                 let is_inserted =
                     calendars
@@ -190,9 +206,26 @@ where
             }
             Some(calendar_reader) => {
                 info!("Reading {}", file);
-                let mut rdr = csv::Reader::from_reader(calendar_reader);
-                for calendar in rdr.deserialize() {
-                    let calendar: Calendar = calendar.with_context(ctx_from_path!(path))?;
+                let mut rdr = csv::ReaderBuilder::new()
+                    .trim(csv::Trim::All)
+                    .from_reader(calendar_reader);
+                log::debug!(
+                    "calendar.txt headers after trim for {}: {:?}",
+                    path.display(),
+                    rdr.headers().ok()
+                );
+                for (idx, calendar) in rdr.deserialize::<Calendar>().enumerate() {
+                    let calendar: Calendar = calendar
+                        .map_err(|err| {
+                            log::error!(
+                                "failed to parse calendar.txt row {} ({}): {}",
+                                idx + 2,
+                                path.display(),
+                                err
+                            );
+                            err
+                        })
+                        .with_context(ctx_from_path!(path))?;
                     calendars.push(objects::Calendar {
                         id: calendar.id.clone(),
                         dates: calendar.get_valid_dates(),

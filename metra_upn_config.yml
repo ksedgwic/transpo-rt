@@ -1,0 +1,6 @@
+datasets:
+  - id: metra-upn
+    name: Metra UPN
+    gtfs: https://31de1f78ed32b8034f70866be3b6aeb7:3ee9591dc0018bdabf809678384b4b4a@gtfsapi.metrarail.com/gtfs/raw/schedule.zip
+    gtfs-rt-urls:
+      - https://31de1f78ed32b8034f70866be3b6aeb7:3ee9591dc0018bdabf809678384b4b4a@gtfsapi.metrarail.com/gtfs/raw/tripUpdates.dat

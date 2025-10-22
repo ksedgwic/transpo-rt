@@ -199,7 +199,9 @@ where
 {
     let (reader, path) = file_handler.get_file(file_name)?;
 
-    let mut rdr = csv::Reader::from_reader(reader);
+    let mut rdr = csv::ReaderBuilder::new()
+        .trim(csv::Trim::All)
+        .from_reader(reader);
     Ok(rdr
         .deserialize()
         .collect::<StdResult<_, _>>()

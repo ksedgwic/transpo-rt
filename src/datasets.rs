@@ -239,8 +239,10 @@ impl Dataset {
         log::info!("reading from path");
         let gtfs = dataset_info.gtfs.as_str();
         let nav_data = if gtfs.starts_with("http") {
+            log::debug!("gtfs read_from_url \"{}\"", gtfs);
             transit_model::gtfs::read_from_url(gtfs, None::<&str>, None)
         } else {
+            log::debug!("gtfs read_from_zip \"{}\"", gtfs);
             transit_model::gtfs::read_from_zip(gtfs, None::<&str>, None)
         }
         .map_err(|e| anyhow!("impossible to read GTFS {} because {}", gtfs, e))?;

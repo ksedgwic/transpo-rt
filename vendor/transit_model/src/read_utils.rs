@@ -198,21 +198,28 @@ where
     O: for<'de> serde::Deserialize<'de>,
 {
     let (reader, path) = file_handler.get_file(file_name)?;
+    let path_display = path.display().to_string();
 
     let mut rdr = csv::ReaderBuilder::new()
         .trim(csv::Trim::All)
         .from_reader(reader);
+    let headers = rdr.headers().ok().cloned();
+
     let records: StdResult<Vec<O>, _> = rdr.deserialize().collect();
-    records.map_err(|e| {
-        log::error!(
-            "error while deserializing CSV rows from {}: {}",
-            path.display(),
-            e
-        );
-        failure::Error::from(e)
-            .context(format!("while reading {}", path.display()))
-            .into()
-    })
+    let result: std::result::Result<Vec<O>, failure::Error> = match records {
+        Ok(vec) => Ok(vec),
+        Err(err) => {
+            log::error!(
+                "error while deserializing CSV rows from {}: {} (headers={:?})",
+                path_display,
+                err,
+                headers
+            );
+            Err(failure::Error::from(err))
+        }
+    };
+
+    result.map_err(|e| e.context(format!("while reading {}", path_display)).into())
 }
 
 /// Read a CollectionId from a zip in a file_handler

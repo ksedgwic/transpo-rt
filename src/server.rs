@@ -17,6 +17,20 @@ async fn create_dataset_actors_impl(
 ) -> (DatasetInfo, Result<Addr<DatasetActor>, anyhow::Error>) {
     log::info!("creating actors");
     let dataset = Dataset::try_from_dataset_info(dataset_info.clone(), &generation_period);
+    if let Err(ref err) = dataset {
+        slog::error!(
+            logger,
+            "initial GTFS load failed";
+            "dataset_id" => dataset_info.id.clone(),
+            "error" => format!("{:#}", err)
+        );
+    } else {
+        slog::info!(
+            logger,
+            "initial GTFS load succeeded";
+            "dataset_id" => dataset_info.id.clone()
+        );
+    }
 
     let arc_dataset = Arc::new(dataset);
     let rt_dataset =

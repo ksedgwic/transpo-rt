@@ -103,7 +103,7 @@ async fn main() -> std::io::Result<()> {
     actix_web::HttpServer::new(move || {
         actix_web::App::new()
             .wrap(
-                actix_web::middleware::normalize::NormalizePath::new(TrailingSlash::Trim),
+                actix_web::middleware::normalize::NormalizePath::new(TrailingSlash::Always),
             )
             .wrap(
                 actix_cors::Cors::default()

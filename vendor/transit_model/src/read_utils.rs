@@ -202,10 +202,17 @@ where
     let mut rdr = csv::ReaderBuilder::new()
         .trim(csv::Trim::All)
         .from_reader(reader);
-    Ok(rdr
-        .deserialize()
-        .collect::<StdResult<_, _>>()
-        .with_context(ctx_from_path!(path))?)
+    let records: StdResult<Vec<O>, _> = rdr.deserialize().collect();
+    records.map_err(|e| {
+        log::error!(
+            "error while deserializing CSV rows from {}: {}",
+            path.display(),
+            e
+        );
+        failure::Error::from(e)
+            .context(format!("while reading {}", path.display()))
+            .into()
+    })
 }
 
 /// Read a CollectionId from a zip in a file_handler
@@ -215,7 +222,10 @@ where
     O: for<'de> serde::Deserialize<'de> + Id<O>,
 {
     let vec = read_objects(file_handler, file_name)?;
-    CollectionWithId::new(vec)
+    CollectionWithId::new(vec).map_err(|e| {
+        log::error!("error while building collection for {}: {}", file_name, e);
+        e
+    })
 }
 
 /// Read an URL and get a cursor on the hosted file

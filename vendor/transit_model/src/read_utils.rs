@@ -204,29 +204,16 @@ where
         .trim(csv::Trim::All)
         .from_reader(reader);
     let headers = rdr.headers().ok().cloned();
-    let trimmed_headers = headers.as_ref().map(|original| {
-        let trimmed: csv::StringRecord = original.iter().map(|field| field.trim()).collect();
-        if trimmed != *original {
-            // use stderr so it always appears regardless of logger setup
-            eprintln!(
-                "[transit_model] trimmed header whitespace for {}: {:?}",
-                path_display, trimmed
-            );
-            rdr.set_headers(trimmed.clone());
-        }
-        trimmed
-    });
 
     let records: StdResult<Vec<O>, _> = rdr.deserialize().collect();
     let result: std::result::Result<Vec<O>, failure::Error> = match records {
         Ok(vec) => Ok(vec),
         Err(err) => {
             log::error!(
-                "error while deserializing CSV rows from {}: {} (headers={:?}, trimmed_headers={:?})",
+                "error while deserializing CSV rows from {}: {} (headers={:?})",
                 path_display,
                 err,
-                headers,
-                trimmed_headers
+                headers
             );
             Err(failure::Error::from(err))
         }

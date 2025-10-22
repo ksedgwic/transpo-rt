@@ -295,11 +295,23 @@ where
     let file_name = "stop_times.txt";
     let (reader, path) = file_handler.get_file(file_name)?;
     info!("Reading stop_times.txt");
-    let mut rdr = csv::Reader::from_reader(reader);
+    let mut rdr = csv::ReaderBuilder::new()
+        .trim(csv::Trim::All)
+        .from_reader(reader);
     let mut headsigns = HashMap::new();
     let mut tmp_vjs = HashMap::new();
-    for stop_time in rdr.deserialize() {
-        let mut stop_time: StopTime = stop_time.with_context(ctx_from_path!(path))?;
+    for (idx, stop_time) in rdr.deserialize::<StopTime>().enumerate() {
+        let mut stop_time: StopTime = stop_time
+            .map_err(|err| {
+                log::error!(
+                    "failed to parse stop_times.txt row {} ({}): {}",
+                    idx + 2,
+                    path.display(),
+                    err
+                );
+                err
+            })
+            .with_context(ctx_from_path!(path))?;
         let vj_idx = collections
             .vehicle_journeys
             .get_idx(&stop_time.trip_id)

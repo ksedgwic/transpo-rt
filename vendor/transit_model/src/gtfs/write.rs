@@ -424,6 +424,10 @@ pub fn write_stop_times(
                     local_zone_id: st.local_zone_id,
                     stop_headsign: stop_times_headsigns.get(&(vj_idx, st.sequence)).cloned(),
                     timepoint: !st.datetime_estimated,
+                    center_boarding: 0,
+                    south_boarding: 0,
+                    bikes_allowed: 0,
+                    notice: None,
                 })
                 .with_context(ctx_from_path!(st_wtr))?;
         }

@@ -15,7 +15,8 @@
 // <http://www.gnu.org/licenses/>.
 
 use crate::collection::{Collection, CollectionWithId, Id};
-use crate::objects::{AddPrefix, Date};
+use crate::objects::{AddPrefix, Date, Time};
+use std::str::FromStr;
 use chrono::NaiveDate;
 use csv;
 use failure::ResultExt;
@@ -76,6 +77,29 @@ where
     match u8::deserialize(deserializer) {
         Ok(val) => Ok(val != 0),
         Err(_) => Ok(true),
+    }
+}
+
+pub fn de_time_allow_empty<'de, D>(deserializer: D) -> Result<Option<Time>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    use serde::Deserialize;
+    match Option::<String>::deserialize(deserializer)? {
+        Some(ref s) if !s.trim().is_empty() => Time::from_str(s.trim())
+            .map(Some)
+            .map_err(serde::de::Error::custom),
+        _ => Ok(None),
+    }
+}
+
+pub fn ser_from_time_option<S>(time: &Option<Time>, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+{
+    match time {
+        Some(t) => serializer.serialize_str(&t.to_string()),
+        None => serializer.serialize_str(""),
     }
 }
 

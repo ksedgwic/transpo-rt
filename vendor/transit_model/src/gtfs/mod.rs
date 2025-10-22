@@ -163,9 +163,20 @@ fn default_true_bool() -> bool {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[allow(dead_code)]
 struct StopTime {
     trip_id: String,
+    #[serde(
+        deserialize_with = "de_time_allow_empty",
+        serialize_with = "ser_from_time_option",
+        default
+    )]
     arrival_time: Option<Time>,
+    #[serde(
+        deserialize_with = "de_time_allow_empty",
+        serialize_with = "ser_from_time_option",
+        default
+    )]
     departure_time: Option<Time>,
     #[serde(deserialize_with = "de_without_slashes")]
     stop_id: String,
@@ -182,6 +193,14 @@ struct StopTime {
         default = "default_true_bool"
     )]
     timepoint: bool,
+    #[serde(default, deserialize_with = "de_with_empty_default", skip_serializing)]
+    center_boarding: u8,
+    #[serde(default, deserialize_with = "de_with_empty_default", skip_serializing)]
+    south_boarding: u8,
+    #[serde(default, deserialize_with = "de_with_empty_default", skip_serializing)]
+    bikes_allowed: u8,
+    #[serde(default, skip_serializing)]
+    notice: Option<String>,
 }
 
 #[derive(Derivative, Serialize, Deserialize, Debug, PartialEq)]

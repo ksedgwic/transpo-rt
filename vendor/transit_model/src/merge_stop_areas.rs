@@ -34,6 +34,7 @@ use std::path::PathBuf;
 use std::result::Result as StdResult;
 
 #[derive(Deserialize, Debug)]
+#[allow(dead_code)]
 struct StopAreaMergeRule {
     #[serde(rename = "stop_area_id")]
     id: String,

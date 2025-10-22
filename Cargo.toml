@@ -21,8 +21,8 @@ prost-derive = "0.6"
 serde = "1.0"
 serde_derive = "1"
 structopt = "0.3"
-transit_model = "=0.4.1"
-chrono-tz = "0.5"
+transit_model = "0.56.1"
+chrono-tz = "0.8"
 serde_yaml = "0.8"
 time-parse = "0.1"
 openapi-schema = { git = "https://github.com/antoine-de/openapi-schema.git", rev = "7e7c373e8b9f96dd81c7aaae0d2d307d1e82ff40" }
@@ -37,6 +37,7 @@ slog-stdlog = "4"
 rustic_hal = "0.2"
 url = "2"
 slog-scope-futures = "0.1"
+typed_index_collection = "2.2"
 
 [dev-dependencies]
 serde_json = "1.0"

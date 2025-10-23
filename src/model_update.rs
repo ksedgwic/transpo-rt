@@ -5,8 +5,8 @@ use anyhow::Error;
 use chrono::{DateTime, NaiveDateTime, Utc};
 use log::{debug, trace, warn};
 use std::collections::HashMap;
-use typed_index_collection::Idx;
 use transit_model::objects::StopPoint;
+use typed_index_collection::Idx;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct StopTimeUpdate {

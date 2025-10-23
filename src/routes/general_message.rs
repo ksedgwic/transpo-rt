@@ -36,7 +36,7 @@ fn get_max_validity(
         .iter()
         .filter_map(|p| utils::read_pbf_dt(p.end, timezone))
         .max()
-        .map(crate::siri_lite::DateTime)
+        .map(|dt| crate::siri_lite::DateTime::from_naive_in_timezone(dt, &timezone))
 }
 
 fn display_alert(
@@ -124,7 +124,7 @@ fn general_message(
 
     let requested_dt = request
         .request_timestamp
-        .map(|d| d.0)
+        .map(|d| d.with_timezone(&timezone).naive_local())
         .unwrap_or_else(|| chrono::Utc::now().with_timezone(&timezone).naive_local());
     // Note: we decode the gtfs at the query. if needed we can cache this, to parse it once
     use prost::Message;

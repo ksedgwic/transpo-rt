@@ -194,10 +194,7 @@ pub trait HasTimezone {
 
 impl HasTimezone for transit_model::Model {
     fn timezone(&self) -> Option<chrono_tz::Tz> {
-        self.networks
-            .values()
-            .next()
-            .and_then(|n| n.timezone)
+        self.networks.values().next().and_then(|n| n.timezone)
     }
 }
 

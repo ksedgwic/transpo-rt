@@ -1,8 +1,8 @@
+use actix_web::middleware::normalize::TrailingSlash;
 use anyhow::{anyhow, Context};
 use structopt::StructOpt;
 use transpo_rt::datasets::{DatasetInfo, Datasets};
 use transpo_rt::middlewares;
-use actix_web::middleware::normalize::TrailingSlash;
 
 #[derive(StructOpt, Debug, Clone)]
 #[structopt(name = "transpo-rt")]
@@ -102,9 +102,9 @@ async fn main() -> std::io::Result<()> {
 
     actix_web::HttpServer::new(move || {
         actix_web::App::new()
-            .wrap(
-                actix_web::middleware::normalize::NormalizePath::new(TrailingSlash::Always),
-            )
+            .wrap(actix_web::middleware::normalize::NormalizePath::new(
+                TrailingSlash::Always,
+            ))
             .wrap(
                 actix_cors::Cors::default()
                     .allow_any_origin()

@@ -1,10 +1,14 @@
 use chrono::{
-    offset::Offset, DateTime as ChronoDateTime, FixedOffset, LocalResult, NaiveDateTime, TimeZone,
+    offset::Offset, DateTime as ChronoDateTime, Duration, FixedOffset, LocalResult, NaiveDateTime,
+    TimeZone,
 };
 use openapi_schema::OpenapiSchema;
 
 #[derive(Debug, Clone)]
-pub struct DateTime(pub ChronoDateTime<FixedOffset>);
+pub struct DateTime {
+    inner: ChronoDateTime<FixedOffset>,
+    had_offset: bool,
+}
 
 impl DateTime {
     pub fn from_naive_in_timezone(naive: NaiveDateTime, tz: &chrono_tz::Tz) -> Self {
@@ -21,29 +25,56 @@ impl DateTime {
                 }
             }
         };
-        DateTime(ChronoDateTime::from_local(naive, offset))
+        DateTime {
+            inner: ChronoDateTime::from_local(naive, offset),
+            had_offset: true,
+        }
     }
 
     pub fn with_timezone(&self, tz: &chrono_tz::Tz) -> ChronoDateTime<chrono_tz::Tz> {
-        self.0.with_timezone(tz)
+        if self.had_offset {
+            self.inner.with_timezone(tz)
+        } else {
+            let naive = self.inner.naive_local();
+            match tz.from_local_datetime(&naive) {
+                LocalResult::Single(dt) => dt,
+                LocalResult::Ambiguous(earliest, _) => earliest,
+                LocalResult::None => {
+                    let previous = naive - Duration::seconds(1);
+                    match tz.from_local_datetime(&previous) {
+                        LocalResult::Single(dt) | LocalResult::Ambiguous(dt, _) => {
+                            dt + Duration::seconds(1)
+                        }
+                        LocalResult::None => tz.from_utc_datetime(&naive),
+                    }
+                }
+            }
+        }
     }
 
     pub fn naive_local(&self) -> NaiveDateTime {
-        self.0.naive_local()
+        self.inner.naive_local()
     }
 }
 
 impl From<ChronoDateTime<FixedOffset>> for DateTime {
     fn from(dt: ChronoDateTime<FixedOffset>) -> Self {
-        DateTime(dt)
+        DateTime {
+            inner: dt,
+            had_offset: true,
+        }
     }
 }
 
 impl std::string::ToString for DateTime {
     fn to_string(&self) -> String {
-        self.0
-            .to_rfc3339_opts(chrono::SecondsFormat::Secs, true)
-            .to_string()
+        if self.had_offset {
+            self.inner
+                .to_rfc3339_opts(chrono::SecondsFormat::Secs, true)
+                .to_string()
+        } else {
+            self.inner.naive_local().format("%Y-%m-%dT%H:%M:%S").to_string()
+        }
     }
 }
 
@@ -63,10 +94,15 @@ impl<'de> ::serde::Deserialize<'de> for DateTime {
     {
         let s = String::deserialize(deserializer)?;
         chrono::DateTime::parse_from_rfc3339(&s)
-            .map(DateTime)
+            .map(|dt| DateTime {
+                inner: dt,
+                had_offset: true,
+            })
             .or_else(|_| {
-                NaiveDateTime::parse_from_str(&s, "%Y-%m-%dT%H:%M:%S")
-                    .map(|naive| DateTime(ChronoDateTime::from_local(naive, FixedOffset::east(0))))
+                NaiveDateTime::parse_from_str(&s, "%Y-%m-%dT%H:%M:%S").map(|naive| DateTime {
+                    inner: ChronoDateTime::from_local(naive, FixedOffset::east(0)),
+                    had_offset: false,
+                })
             })
             .map_err(|e| serde::de::Error::custom(format!("datetime format not valid: {}", e)))
     }

@@ -3,7 +3,7 @@ use crate::tests::test_utils::{create_feed_message, make_stu, trip_update};
 use crate::transit_realtime as tr;
 use chrono::NaiveDateTime;
 use std::str::FromStr;
-use transit_model_builder::ModelBuilder;
+use crate::tests::ModelBuilder;
 
 fn ndt(d: &str) -> NaiveDateTime {
     NaiveDateTime::from_str(d).unwrap()

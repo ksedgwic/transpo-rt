@@ -107,19 +107,19 @@ async fn test_stop_monitoring(srv: &mut actix_web::test::TestServer) {
     let first_passage = &vj.monitored_call.as_ref().unwrap();
     assert_eq!(
         string(&first_passage.aimed_arrival_time),
-        Some("2018-12-15T06:20:00".to_owned())
+        Some("2018-12-15T06:20:00-08:00".to_owned())
     );
     assert_eq!(
         string(&first_passage.aimed_departure_time),
-        Some("2018-12-15T06:20:00".to_owned())
+        Some("2018-12-15T06:20:00-08:00".to_owned())
     );
     assert_eq!(
         string(&first_passage.expected_arrival_time),
-        Some("2018-12-15T06:26:30".to_owned())
+        Some("2018-12-15T06:26:30-08:00".to_owned())
     );
     assert_eq!(
         string(&first_passage.expected_departure_time),
-        Some("2018-12-15T06:28:31".to_owned())
+        Some("2018-12-15T06:28:31-08:00".to_owned())
     );
     assert_eq!(first_passage.order, 2);
 
@@ -133,19 +133,19 @@ async fn test_stop_monitoring(srv: &mut actix_web::test::TestServer) {
     let second_passage = &vj.monitored_call.as_ref().unwrap();
     assert_eq!(
         string(&second_passage.aimed_arrival_time),
-        Some("2018-12-15T08:00:00".to_owned())
+        Some("2018-12-15T08:00:00-08:00".to_owned())
     );
     assert_eq!(
         string(&second_passage.aimed_departure_time),
-        Some("2018-12-15T08:00:00".to_owned())
+        Some("2018-12-15T08:00:00-08:00".to_owned())
     );
     assert_eq!(
         string(&second_passage.expected_arrival_time),
-        Some("2018-12-15T08:28:30".to_owned())
+        Some("2018-12-15T08:28:30-08:00".to_owned())
     );
     assert_eq!(
         string(&second_passage.expected_departure_time),
-        Some("2018-12-15T08:28:31".to_owned())
+        Some("2018-12-15T08:28:31-08:00".to_owned())
     );
     assert_eq!(second_passage.order, 1);
 }

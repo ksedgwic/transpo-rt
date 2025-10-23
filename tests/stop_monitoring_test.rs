@@ -17,13 +17,13 @@ async fn sp_monitoring_integration_test() {
 MonitoringRef=EMSI&\
 StartTime=2018-12-15T05:22:00&\
 DataFreshness=Scheduled&\
-MaximumStopVisits=3",
+MaximumStopVisits=2",
     )
     .await;
     let spd = resp.siri.service_delivery.unwrap();
     let sm = spd.stop_monitoring_delivery.iter().next().unwrap();
 
-    assert_eq!(sm.monitored_stop_visit.len(), 3);
+    assert_eq!(sm.monitored_stop_visit.len(), 2);
 
     let first_passage = &sm.monitored_stop_visit[0];
 
@@ -34,12 +34,12 @@ MaximumStopVisits=3",
     let passage = &vj.monitored_call.as_ref().unwrap();
     assert_eq!(
         string(&passage.aimed_arrival_time),
-        Some("2018-12-15T06:26:00".into())
+        Some("2018-12-15T06:26:00-08:00".into())
     );
     assert!(passage.expected_arrival_time.is_none());
     assert_eq!(
         string(&passage.aimed_departure_time),
-        Some("2018-12-15T06:28:00".into())
+        Some("2018-12-15T06:28:00-08:00".into())
     );
     assert!(passage.expected_departure_time.is_none());
     assert_eq!(passage.order, 5);
@@ -72,11 +72,11 @@ async fn test_beatty_stop_call(srv: &mut actix_web::test::TestServer) {
     let first_passage = &vj.monitored_call.as_ref().unwrap();
     assert_eq!(
         string(&first_passage.aimed_arrival_time),
-        Some("2018-12-15T06:20:00".to_owned())
+        Some("2018-12-15T06:20:00-08:00".to_owned())
     );
     assert_eq!(
         string(&first_passage.aimed_departure_time),
-        Some("2018-12-15T06:20:00".to_owned())
+        Some("2018-12-15T06:20:00-08:00".to_owned())
     );
     assert!(first_passage.expected_arrival_time.is_none());
     assert!(first_passage.expected_departure_time.is_none());
@@ -92,11 +92,11 @@ async fn test_beatty_stop_call(srv: &mut actix_web::test::TestServer) {
     let second_passage = &vj.monitored_call.as_ref().unwrap();
     assert_eq!(
         string(&second_passage.aimed_arrival_time),
-        Some("2018-12-15T08:00:00".to_owned())
+        Some("2018-12-15T08:00:00-08:00".to_owned())
     );
     assert_eq!(
         string(&second_passage.aimed_departure_time),
-        Some("2018-12-15T08:00:00".to_owned())
+        Some("2018-12-15T08:00:00-08:00".to_owned())
     );
     assert!(second_passage.expected_arrival_time.is_none());
     assert!(second_passage.expected_departure_time.is_none());
@@ -119,11 +119,11 @@ async fn test_beatty_stop_call(srv: &mut actix_web::test::TestServer) {
     let first_passage = &vj.monitored_call.as_ref().unwrap();
     assert_eq!(
         string(&first_passage.aimed_arrival_time),
-        Some("2018-12-15T08:00:00".to_owned())
+        Some("2018-12-15T08:00:00-08:00".to_owned())
     );
     assert_eq!(
         string(&first_passage.aimed_departure_time),
-        Some("2018-12-15T08:00:00".to_owned())
+        Some("2018-12-15T08:00:00-08:00".to_owned())
     );
     assert!(first_passage.expected_arrival_time.is_none());
     assert!(first_passage.expected_departure_time.is_none());
@@ -137,11 +137,11 @@ async fn test_beatty_stop_call(srv: &mut actix_web::test::TestServer) {
     let second_passage = &vj.monitored_call.as_ref().unwrap();
     assert_eq!(
         string(&second_passage.aimed_arrival_time),
-        Some("2018-12-15T12:15:00".to_owned())
+        Some("2018-12-15T12:15:00-08:00".to_owned())
     );
     assert_eq!(
         string(&second_passage.aimed_departure_time),
-        Some("2018-12-15T12:15:00".to_owned())
+        Some("2018-12-15T12:15:00-08:00".to_owned())
     );
     assert!(second_passage.expected_arrival_time.is_none());
     assert!(second_passage.expected_departure_time.is_none());
@@ -224,19 +224,19 @@ async fn sp_monitoring_realtime_integration_test() {
     let passage = &vj.monitored_call.as_ref().unwrap();
     assert_eq!(
         string(&passage.aimed_arrival_time),
-        Some("2018-12-15T06:26:00".into())
+        Some("2018-12-15T06:26:00-08:00".into())
     );
     assert_eq!(
         string(&passage.expected_arrival_time),
-        Some("2018-12-15T06:26:30".into())
+        Some("2018-12-15T06:26:30-08:00".into())
     );
     assert_eq!(
         string(&passage.aimed_departure_time),
-        Some("2018-12-15T06:28:00".into())
+        Some("2018-12-15T06:28:00-08:00".into())
     );
     assert_eq!(
         string(&passage.expected_departure_time),
-        Some("2018-12-15T06:28:30".into())
+        Some("2018-12-15T06:28:30-08:00".into())
     );
     assert_eq!(passage.order, 5);
     assert_eq!(passage.stop_point_name, "E Main St / S Irving St (Demo)");

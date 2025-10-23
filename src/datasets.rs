@@ -255,7 +255,7 @@ impl Dataset {
 #[cfg(test)]
 mod tests {
     use crate::datasets::{Connection, DatedVehicleJourney, Period};
-    use transit_model_builder::ModelBuilder;
+    use crate::tests::ModelBuilder;
 
     #[test]
     fn test_timetable_creation() {

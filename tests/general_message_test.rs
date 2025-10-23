@@ -105,7 +105,7 @@ async fn call_in_activity_period(srv: &mut actix_web::test::TestServer) {
                 }
               ]
             },
-            "ValidUntilTime": "2018-12-15T12:00:00"
+            "ValidUntilTime": "2018-12-15T12:00:00-08:00"
           }
         ]))
     );

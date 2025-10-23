@@ -252,9 +252,10 @@ pub fn get_model_update(
 #[cfg(test)]
 mod test {
     use crate::transit_realtime as tr;
+    use crate::tests::ModelBuilder;
 
     fn make_fake_model() -> transit_model::Model {
-        transit_model_builder::ModelBuilder::default()
+        ModelBuilder::default()
             .calendar("c", |c| {
                 c.dates.insert(chrono::NaiveDate::from_ymd(2019, 2, 6));
             })
@@ -385,7 +386,7 @@ mod test {
             direction_id: Some(1), // 1 means backward direction, so in transit_model it will means route "l1_R"
             ..Default::default()
         };
-        let model = transit_model_builder::ModelBuilder::default()
+        let model = ModelBuilder::default()
             .calendar("c", |c| {
                 c.dates.insert(chrono::NaiveDate::from_ymd(2019, 2, 6));
             })

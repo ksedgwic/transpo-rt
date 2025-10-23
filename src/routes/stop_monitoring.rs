@@ -96,20 +96,27 @@ fn create_monitored_stop_visit(
         // if we have no realtime data, we consider the update time to be the time of the base schedule loading
         // (it's not that great, but we don't have something better)
         .unwrap_or_else(|| data.loaded_at);
+    let tz = &data.timezone;
     let call = model::MonitoredCall {
         order: connection.sequence as u16,
         stop_point_name: stop.name.clone(),
         vehicle_at_stop: None,
         destination_display: None,
         arrival_status: None,
-        aimed_arrival_time: Some(siri_lite::DateTime(connection.arr_time)),
-        aimed_departure_time: Some(siri_lite::DateTime(connection.dep_time)),
+        aimed_arrival_time: Some(siri_lite::DateTime::from_naive_in_timezone(
+            connection.arr_time,
+            tz,
+        )),
+        aimed_departure_time: Some(siri_lite::DateTime::from_naive_in_timezone(
+            connection.dep_time,
+            tz,
+        )),
         expected_arrival_time: updated_connection
             .and_then(|c| c.arr_time)
-            .map(siri_lite::DateTime),
+            .map(|dt| siri_lite::DateTime::from_naive_in_timezone(dt, tz)),
         expected_departure_time: updated_connection
             .and_then(|c| c.dep_time)
-            .map(siri_lite::DateTime),
+            .map(|dt| siri_lite::DateTime::from_naive_in_timezone(dt, tz)),
     };
 
     model::MonitoredStopVisit {
@@ -130,11 +137,7 @@ fn get_line_ref<'a>(cnx: &Connection, model: &'a transit_model::Model) -> Option
     model.routes.get(&vj.route_id).map(|r| r.line_id.as_str())
 }
 
-fn calls_at_stop(
-    cnx: &Connection,
-    destination_ref: &str,
-    model: &transit_model::Model,
-) -> bool {
+fn calls_at_stop(cnx: &Connection, destination_ref: &str, model: &transit_model::Model) -> bool {
     let vj = &model.vehicle_journeys[cnx.dated_vj.vj_idx];
     vj.stop_times.iter().any(|st| {
         st.sequence >= cnx.sequence
@@ -142,11 +145,7 @@ fn calls_at_stop(
     })
 }
 
-fn avoids_stops(
-    cnx: &Connection,
-    excluded_stops: &[String],
-    model: &transit_model::Model,
-) -> bool {
+fn avoids_stops(cnx: &Connection, excluded_stops: &[String], model: &transit_model::Model) -> bool {
     if excluded_stops.is_empty() {
         return true;
     }
@@ -179,11 +178,15 @@ fn create_stop_monitoring(
     request: &Params,
 ) -> Vec<model::StopMonitoringDelivery> {
     // if we want to datetime in the query, we get the current_time (in the timezone of the dataset)
-    let requested_start_time = request.start_time.as_ref().map(|d| d.0).unwrap_or_else(|| {
-        chrono::Utc::now()
-            .with_timezone(&data.timezone)
-            .naive_local()
-    });
+    let requested_start_time = request
+        .start_time
+        .as_ref()
+        .map(|d| d.with_timezone(&data.timezone).naive_local())
+        .unwrap_or_else(|| {
+            chrono::Utc::now()
+                .with_timezone(&data.timezone)
+                .naive_local()
+        });
     let requested_line_ref = request.line_ref.as_deref();
     let stop_visit = data
         .timetable
